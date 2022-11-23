@@ -1,1 +1,12 @@
 node_modules
+
+
+Gwei = 10
+
+BUSD Address. keep blank
+
+buyAmount = 0.002
+
+pairAddress = 0xD51830D7e02Db7650E5CBB548E649e7F0D06A428
+
+targetAddress = 0xb7f207AE6283D0281de6eFaE1F6d5D5A34B98F1E
