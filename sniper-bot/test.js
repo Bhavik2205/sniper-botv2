@@ -32,15 +32,17 @@ const tokenContract = new web3.eth.Contract(
 );
 
 // Get Balance in BNB
-let balanceOf = await tokenContract.methods.balanceOf(account).call();
+let balanceOf = await web3.eth.getBalance(account);
 const format = web3.utils.fromWei(balanceOf);
 console.log(format);
 
 // Get Balance in Token
+let tokenBalance = await tokenContract.methods.balanceOf(account).call();
+const format1 = web3.utils.fromWei(tokenBalance);
+console.log(format1);
 
 // Get Nonce
-
-// Get Pair
+let Nonce = await // Get Pair
 
 // Get Token Name
 
@@ -95,7 +97,7 @@ async function buyToken(tokenAddress) {
   } catch (err) {
     return { error1: err.message };
   }
-}
+};
 
 //Approve
 async function ApproveToken() {
