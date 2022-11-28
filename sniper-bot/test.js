@@ -2,35 +2,36 @@ import * as abi from "./Abi.js";
 import { Transaction } from "@ethereumjs/tx";
 import { Common } from "@ethereumjs/common";
 import Web3 from "web3";
+import ethers from "ethers";
 
-const RPC = "https://data-seed-prebsc-1-s1.binance.org:8545/";
-const factoryAddress = "0x5Fe5cC0122403f06abE2A75DBba1860Edb762985";
-const routerAddress = "0xcc7adc94f3d80127849d2b41b6439b7cf1eb4ae0";
-const pairAddress = "";
-const wBNBAddress = "0x0dE8FCAE8421fc79B29adE9ffF97854a424Cad09";
-const BUSDAddress = "";
-const targetAddress = "";
+//0x18cbafe500000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000019b562b78ae419900000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000ed22814e06a2a5a63259018e3e03e5c9128b8a300000000000000000000000000000000000000000000000000000000637dcfd40000000000000000000000000000000000000000000000000000000000000002000000000000000000000000b7f207ae6283d0281de6efae1f6d5d5a34b98f1e0000000000000000000000000de8fcae8421fc79b29ade9fff97854a424cad09
+
+// const RPC = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+// const factoryAddress = "0x5Fe5cC0122403f06abE2A75DBba1860Edb762985";
+const factoryAddress = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";
+// const routerAddress = routerAddress;
+const routerAddress = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
+// const pairAddress = "";
+// const wBNBAddress = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+// const BUSDAddress = "";
+const targetAddress = "0x8C851d1a123Ff703BD1f9dabe631b69902Df5f97";
 const walletAddress = "0x0ED22814e06A2A5a63259018E3E03e5C9128b8A3";
 const privateKeyAddress =
   "7983c6ca4ee80317a9dc0e0797385f67b203172bc18daced191e42b87c3139e1";
 const Gwei = "10";
 const GasLimit = "1000000";
 const transactionInterval = 6000;
-const buyAmount = 0.002;
+const buyAmount = "0.002";
 
-const web3 = new Web3("https://data-seed-prebsc-1-s1.binance.org:8545/");
-const web33 = new Web3("https://bsc-dataseed1.binance.org/");
-const wBNBContract = "0x0dE8FCAE8421fc79B29adE9ffF97854a424Cad09";
-const account = "0x0ED22814e06A2A5a63259018E3E03e5C9128b8A3";
-const routerContract = new web3.eth.Contract(
-  abi.pancakeABI,
-  "0xcc7adc94f3d80127849d2b41b6439b7cf1eb4ae0"
+const web3 = new Web3("https://bsc-dataseed.binance.org/");
+const web33 = new Web3(
+  "wss://wispy-dimensional-log.bsc-testnet.discover.quiknode.pro/acfcd4a918e49a7a9da4b747b075e73862f5cb6f/"
 );
+const wBNBContract = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+const account = walletAddress;
+const routerContract = new web3.eth.Contract(abi.pancakeABI, routerAddress);
 
-const tokenContract = new web3.eth.Contract(
-  abi.tokenABI,
-  "0xb7f207AE6283D0281de6eFaE1F6d5D5A34B98F1E"
-);
+const tokenContract = new web3.eth.Contract(abi.tokenABI, targetAddress);
 
 //Get Balance
 let balance = await web3.eth.getBalance(account);
@@ -66,15 +67,33 @@ const name = await tokenContract.methods.name().call();
 console.log({ Token_Name: name });
 
 // Get Transaction
-const getTransaction = await web3.eth.getTransaction(
-  "0xdb3fa4ccd6a42d3de433730fa787131c938482e13133c691b2b209b64a0d35e1"
-);
-console.log({ Transaction: getTransaction });
-
+async function getTransaction(transaction) {
+  let staticstring =
+    "0x8803dbee000000000000000000000000000000000000000000000000482a1c7300080000000000000000000000000000000000000000000000000029635ebaf3f3174da700000000000000000000000000000000000000000000000000000000000000a00000000000000000000000006c5370374a7ff2d4299f1ea48869e90069a8116c000000000000000000000000000000000000000000000000000000006384ae8e0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000e9e7cea3dedca5984780bafc599bd69add087d560000000000000000000000008c851d1a123ff703bd1f9dabe631b69902df5f97";
+  let trim = staticstring.substring(staticstring.length - 104);
+  let t1 = await web3.eth.getTransaction(transaction);
+  if (t1 != null) {
+    if (t1.input.length >= 500) {
+      console.log({ Transaction: t1.input });
+      let match = t1.input.substring(t1.input.length - 104);
+      if (match === trim) {
+        console.log(t1);
+      }
+    }
+  }
+}
+/*
+getTransaction(
+  "0xbca06fb36a105ec5f7953dc2979effdd4d225096a158fb6062ed64c2d307cb0b"
+);*/
 //pending transactions
-web33.eth.getPendingTransactions().then(console.log);
+var subscription = web33.eth
+  .subscribe("pendingTransactions")
+  .on("data", function (transaction) {
+    console.log(transaction);
+    getTransaction(transaction);
+  });
 
-// console.log({ pending: JSON.stringify(pending) });
 //Buy
 async function buyToken(tokenAddress) {
   try {
@@ -88,18 +107,15 @@ async function buyToken(tokenAddress) {
         parseInt(start) + parseInt(10000)
       )
       .encodeABI();
-    let privateKey = Buffer.from(
-      "7983c6ca4ee80317a9dc0e0797385f67b203172bc18daced191e42b87c3139e1",
-      "hex"
-    );
+    let privateKey = Buffer.from(privateKeyAddress, "hex");
     const common = Common.custom({ chainId: 97 });
     const txObject = {
       nonce: web3.utils.toHex(txCount),
       gasLimit: web3.utils.toHex(1000000),
       gasPrice: web3.utils.toHex(web3.utils.toWei("10", "Gwei")),
-      to: "0xcc7adc94f3d80127849d2b41b6439b7cf1eb4ae0",
+      to: routerAddress,
       data: data,
-      value: web3.utils.toBN(web3.utils.toWei("0.002")),
+      value: web3.utils.toBN(web3.utils.toWei(buyAmount)),
     };
     const tx = Transaction.fromTxData(txObject, { common });
     const signedTx = tx.sign(privateKey);
@@ -131,9 +147,9 @@ async function ApproveToken() {
       error: "OK",
       transaction: [
         {
-          wallet_id: "0x0ED22814e06A2A5a63259018E3E03e5C9128b8A3",
+          wallet_id: walletAddress,
           token_address: "0xb7f207AE6283D0281de6eFaE1F6d5D5A34B98F1E",
-          to_address: "0xcc7adc94f3d80127849d2b41b6439b7cf1eb4ae0",
+          to_address: routerAddress,
         },
       ],
     },
@@ -159,10 +175,7 @@ async function ApproveToken() {
           let data = tokenContract.methods
             .approve(transaction[0].to_address, amount)
             .encodeABI();
-          let privateKey = Buffer.from(
-            "7983c6ca4ee80317a9dc0e0797385f67b203172bc18daced191e42b87c3139e1",
-            "hex"
-          );
+          let privateKey = Buffer.from(privateKeyAddress, "hex");
           const common = Common.custom({ chainId: 97 });
           const txObject = {
             nonce: web3.utils.toHex(txCount),
@@ -201,7 +214,7 @@ async function sellToken(tokenAddress, tokenDecimal) {
   try {
     let txCount = await web3.eth.getTransactionCount(account);
     let start = new Date().getTime();
-    var big_amount = web3.utils.toBN("0.002" * Math.pow(10, 18));
+    var big_amount = web3.utils.toBN(buyAmount * Math.pow(10, 18));
     let balanceOf = await tokenContract.methods.balanceOf(account).call();
     let data = routerContract.methods
       .swapExactTokensForETH(
@@ -212,16 +225,13 @@ async function sellToken(tokenAddress, tokenDecimal) {
         parseInt(start) + parseInt(10000)
       )
       .encodeABI();
-    let privateKey = Buffer.from(
-      "7983c6ca4ee80317a9dc0e0797385f67b203172bc18daced191e42b87c3139e1",
-      "hex"
-    );
+    let privateKey = Buffer.from(privateKeyAddress, "hex");
     const common = Common.custom({ chainId: 97 });
     const txObject = {
       nonce: web3.utils.toHex(txCount),
       gasLimit: web3.utils.toHex(1000000),
       gasPrice: web3.utils.toHex(web3.utils.toWei("10", "Gwei")),
-      to: "0xcc7adc94f3d80127849d2b41b6439b7cf1eb4ae0",
+      to: routerAddress,
       data: data,
     };
     const tx = Transaction.fromTxData(txObject, { common });
