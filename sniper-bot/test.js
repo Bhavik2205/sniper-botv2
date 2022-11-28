@@ -19,6 +19,7 @@ const transactionInterval = 6000;
 const buyAmount = 0.002;
 
 const web3 = new Web3("https://data-seed-prebsc-1-s1.binance.org:8545/");
+const web33 = new Web3("https://bsc-dataseed1.binance.org/");
 const wBNBContract = "0x0dE8FCAE8421fc79B29adE9ffF97854a424Cad09";
 const account = "0x0ED22814e06A2A5a63259018E3E03e5C9128b8A3";
 const routerContract = new web3.eth.Contract(
@@ -31,25 +32,49 @@ const tokenContract = new web3.eth.Contract(
   "0xb7f207AE6283D0281de6eFaE1F6d5D5A34B98F1E"
 );
 
+//Get Balance
+let balance = await web3.eth.getBalance(account);
+console.log({ Balance: balance });
+
 // Get Balance in BNB
 let balanceOf = await web3.eth.getBalance(account);
 const format = web3.utils.fromWei(balanceOf);
-console.log(format);
+console.log({ BNB_Balance: format });
 
 // Get Balance in Token
 let tokenBalance = await tokenContract.methods.balanceOf(account).call();
 const format1 = web3.utils.fromWei(tokenBalance);
-console.log(format1);
+console.log({ Token_Balance: format1 });
 
 // Get Nonce
-let Nonce = await // Get Pair
+let Nonce = await web3.eth.getTransactionCount(account, (err, nonce) => {
+  console.log({ Nonce: nonce });
+});
 
-// Get Token Name
+// Get Pair
+
+// Get Token Symbol
+const symbol = await tokenContract.methods.symbol().call();
+console.log({ Symbol: symbol });
 
 // Get Token Decimals
+const decimals = await tokenContract.methods.decimals().call();
+console.log({ Decimals: decimals });
+
+//Get Token Name
+const name = await tokenContract.methods.name().call();
+console.log({ Token_Name: name });
 
 // Get Transaction
+const getTransaction = await web3.eth.getTransaction(
+  "0xdb3fa4ccd6a42d3de433730fa787131c938482e13133c691b2b209b64a0d35e1"
+);
+console.log({ Transaction: getTransaction });
 
+//pending transactions
+web33.eth.getPendingTransactions().then(console.log);
+
+// console.log({ pending: JSON.stringify(pending) });
 //Buy
 async function buyToken(tokenAddress) {
   try {
@@ -97,7 +122,7 @@ async function buyToken(tokenAddress) {
   } catch (err) {
     return { error1: err.message };
   }
-};
+}
 
 //Approve
 async function ApproveToken() {
